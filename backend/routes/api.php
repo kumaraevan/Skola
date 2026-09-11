@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EnrolmentController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\TeacherController;
 use App\Models\SchoolClass;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // School administration (no teacher access).
     Route::middleware('role:super_admin,school_admin')->group(function () {
         Route::apiResource('students', StudentController::class)->except('show');
+        Route::apiResource('teachers', TeacherController::class)->except('show');
         // Minimal class list for form dropdowns (tenant-scoped).
         Route::get('/classes', fn () => ['data' => SchoolClass::orderBy('name')->get(['id', 'name'])]);
     });
