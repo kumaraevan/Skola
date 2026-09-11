@@ -21,6 +21,38 @@ class EnrolmentController extends Controller
 {
     private const SUBJECTS = ['student' => Student::class, 'teacher' => Teacher::class];
 
+    /** Enrolment overview: each subject with enrolment status + whether biometric consent is active. */
+    public function index(Request $request): JsonResponse
+    {
+        $type = $request->string('type')->toString() === 'teacher' ? 'teacher' : 'student';
+        $model = self::SUBJECTS[$type];
+
+        $consented = Consent::where('subject_type', $model)
+            ->whereNotNull('granted_at')
+            ->whereNull('revoked_at')
+            ->pluck('subject_id')
+            ->flip();
+
+        $subjects = $type === 'teacher'
+            ? Teacher::with('user:id,name')->get()->map(fn ($t) => [
+                'subject_id' => $t->id,
+                'name' => $t->user?->name,
+                'enrolment_status' => $t->enrolment_status,
+            ])->sortBy('name')->values()
+            : Student::orderBy('name')->get()->map(fn ($s) => [
+                'subject_id' => $s->id,
+                'name' => $s->name,
+                'enrolment_status' => $s->enrolment_status,
+            ]);
+
+        $data = $subjects->map(fn (array $row) => [
+            ...$row,
+            'has_consent' => $consented->has($row['subject_id']),
+        ])->values();
+
+        return response()->json(['type' => $type, 'data' => $data]);
+    }
+
     /** Record biometric consent for a subject (granted by parent/guardian or the subject). */
     public function consent(Request $request): JsonResponse
     {

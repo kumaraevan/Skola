@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('students', StudentController::class)->except('show');
         Route::apiResource('teachers', TeacherController::class)->except('show');
         Route::apiResource('classes', ClassController::class)->except('show');
+        Route::get('/enrolment', [EnrolmentController::class, 'index']);
     });
 
     // Kiosk check-in (the kiosk authenticates as a device/service account).
