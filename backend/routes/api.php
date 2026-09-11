@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClassController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EnrolmentController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\TeacherController;
@@ -20,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:super_admin,school_admin,teacher')->group(function () {
         Route::post('/enrolment/consent', [EnrolmentController::class, 'consent']);
         Route::post('/enrolment/face', [EnrolmentController::class, 'store']);
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
         Route::get('/attendance', [AttendanceController::class, 'index']);
         Route::post('/attendance/bypass', [AttendanceController::class, 'bypass']);
     });
