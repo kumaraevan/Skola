@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EnrolmentController;
+use App\Http\Controllers\Api\StudentController;
+use App\Models\SchoolClass;
 use Illuminate\Support\Facades\Route;
 
 // --- Public ---
@@ -18,6 +20,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/enrolment/consent', [EnrolmentController::class, 'consent']);
         Route::post('/enrolment/face', [EnrolmentController::class, 'store']);
         Route::post('/attendance/bypass', [AttendanceController::class, 'bypass']);
+    });
+
+    // School administration (no teacher access).
+    Route::middleware('role:super_admin,school_admin')->group(function () {
+        Route::apiResource('students', StudentController::class)->except('show');
+        // Minimal class list for form dropdowns (tenant-scoped).
+        Route::get('/classes', fn () => ['data' => SchoolClass::orderBy('name')->get(['id', 'name'])]);
     });
 
     // Kiosk check-in (the kiosk authenticates as a device/service account).
