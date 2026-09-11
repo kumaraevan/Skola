@@ -9,11 +9,55 @@ use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class AttendanceController extends Controller
 {
     private const SUBJECTS = ['student' => Student::class, 'teacher' => Teacher::class];
+
+    /**
+     * Attendance roster for a date. Every subject (student or teacher) is listed;
+     * a subject with no record that day is 'absent' (v1 presence semantics).
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $date = $request->filled('date')
+            ? Carbon::parse($request->string('date'))->toDateString()
+            : now()->toDateString();
+        $type = $request->string('type')->toString() === 'teacher' ? 'teacher' : 'student';
+        $model = self::SUBJECTS[$type];
+
+        $records = Attendance::whereDate('date', $date)
+            ->where('subject_type', $model)
+            ->get()
+            ->keyBy('subject_id');
+
+        $subjects = $type === 'teacher'
+            ? Teacher::with('user:id,name')->get()->map(fn ($t) => [
+                'subject_id' => $t->id,
+                'name' => $t->user?->name,
+                'class_name' => null,
+            ])->sortBy('name')->values()
+            : Student::with('schoolClass:id,name')->orderBy('name')->get()->map(fn ($s) => [
+                'subject_id' => $s->id,
+                'name' => $s->name,
+                'class_name' => $s->schoolClass?->name,
+            ]);
+
+        $data = $subjects->map(function (array $row) use ($records) {
+            $rec = $records->get($row['subject_id']);
+
+            return [
+                ...$row,
+                'status' => $rec->status ?? 'absent',
+                'method' => $rec->method ?? null,
+                'check_in_at' => $rec->check_in_at ?? null,
+            ];
+        })->values();
+
+        return response()->json(['date' => $date, 'type' => $type, 'data' => $data]);
+    }
 
     /**
      * Kiosk check-in: tablet sends an on-device embedding; server matches it against

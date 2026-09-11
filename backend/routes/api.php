@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:super_admin,school_admin,teacher')->group(function () {
         Route::post('/enrolment/consent', [EnrolmentController::class, 'consent']);
         Route::post('/enrolment/face', [EnrolmentController::class, 'store']);
+        Route::get('/attendance', [AttendanceController::class, 'index']);
         Route::post('/attendance/bypass', [AttendanceController::class, 'bypass']);
     });
 
