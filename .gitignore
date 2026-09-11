@@ -1,0 +1,22 @@
+# dependencies
+**/node_modules/
+**/vendor/
+
+# env & secrets
+**/.env
+**/.env.*.local
+
+# builds
+**/dist/
+**/build/
+backend/public/build/
+backend/storage/*.key
+
+# dev sqlite database
+**/*.sqlite
+**/*.sqlite-journal
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.log
